@@ -1,28 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const API_BASE_URL = 'https://insurcare-api.onrender.com/api';
 
 export default function App() {
-  const [token, setToken] = useState(null);
-  const [user, setUser] = useState(null);
-  const [isChecking, setIsChecking] = useState(true);
+  const [token, setToken] = useState(() => localStorage.getItem('insurcare_token'));
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('insurcare_user');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // ALWAYS START LOGGED OUT ON FRESH MOUNT
-  useEffect(() => {
-    const savedToken = localStorage.getItem('insurcare_token');
-    const savedUser = localStorage.getItem('insurcare_user');
-
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-    setIsChecking(false);
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -39,7 +29,7 @@ export default function App() {
       const data = await response.json();
 
       if (response.ok) {
-        const authToken = data.token || data.access_token || 'auth-token';
+        const authToken = data.token || data.access_token || 'active-user-token';
         const userData = data.user || { email };
 
         localStorage.setItem('insurcare_token', authToken);
@@ -51,23 +41,23 @@ export default function App() {
         setError(data.message || 'Invalid email or password.');
       }
     } catch (err) {
-      setError('Unable to reach Render backend. Please wait ~30s for instance wake-up.');
+      console.error('Login error:', err);
+      setError('Unable to reach Render backend. Please wait ~30s for the instance to spin up.');
     } finally {
       setLoading(false);
     }
   };
 
+  // MANUAL SIGN-OUT FUNCTION
   const handleLogout = () => {
+    localStorage.removeItem('insurcare_token');
+    localStorage.removeItem('insurcare_user');
     localStorage.clear();
     setToken(null);
     setUser(null);
   };
 
-  if (isChecking) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Portal...</div>;
-  }
-
-  // 1. SHOW LOGIN SCREEN IF NO TOKEN
+  // 1. SIGN IN SCREEN (Rendered when no token exists)
   if (!token) {
     return (
       <div style={styles.authContainer}>
@@ -111,19 +101,23 @@ export default function App() {
     );
   }
 
-  // 2. SHOW DASHBOARD ONLY WHEN AUTHENTICATED
+  // 2. DASHBOARD (Rendered with active Sign Out Control)
   return (
     <div style={styles.dashboardLayout}>
       <header style={styles.header}>
         <h1 style={styles.logo}>Insur-Care Portal</h1>
         <div style={styles.userInfo}>
-          <span>Logged in as: {user?.email || 'Admin'}</span>
-          <button onClick={handleLogout} style={styles.logoutButton}>Sign Out</button>
+          <span style={styles.userBadge}>{user?.email || 'User Session Active'}</span>
+          <button onClick={handleLogout} style={styles.logoutButton}>
+            🔒 Sign Out
+          </button>
         </div>
       </header>
-      <main style={{ padding: '32px' }}>
-        <h2>Executive Dashboard</h2>
-        <p>You are securely logged in.</p>
+      <main style={styles.mainContent}>
+        <div style={styles.banner}>
+          <h2>Executive Dashboard</h2>
+          <p>Authentication active. Click <strong>Sign Out</strong> in the top-right header anytime to return to the login screen.</p>
+        </div>
       </main>
     </div>
   );
@@ -144,10 +138,12 @@ const styles = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', backgroundColor: '#1e293b', color: '#ffffff' },
   logo: { fontSize: '20px', margin: 0 },
   userInfo: { display: 'flex', alignItems: 'center', gap: '16px' },
-  logoutButton: { padding: '6px 12px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer' }
+  userBadge: { fontSize: '14px', color: '#94a3b8' },
+  logoutButton: { padding: '8px 16px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' },
+  mainContent: { padding: '32px' },
+  banner: { padding: '24px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }
 };
 
-            </efault App;
 
 
 
