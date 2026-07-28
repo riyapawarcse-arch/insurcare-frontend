@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
+// ---------------------------------------------------------------------------
+// 1. RENDER BACKEND API CONFIGURATION
+// ---------------------------------------------------------------------------
 const API_BASE_URL = 'https://insurcare-api.onrender.com/api';
 
-// 1. LOGIN COMPONENT (First screen users see)
+// ---------------------------------------------------------------------------
+// 2. LOGIN / AUTHENTICATION COMPONENT
+// ---------------------------------------------------------------------------
 function Login({ setToken, setUser }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,17 +31,22 @@ function Login({ setToken, setUser }) {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('insurcare_token', data.token || 'auth-token');
-        localStorage.setItem('insurcare_user', JSON.stringify(data.user || { email }));
-        setToken(data.token || 'auth-token');
-        setUser(data.user || { email });
+        const authToken = data.token || data.access_token || 'authenticated-token';
+        const userData = data.user || { email };
+
+        localStorage.setItem('insurcare_token', authToken);
+        localStorage.setItem('insurcare_user', JSON.stringify(userData));
+
+        setToken(authToken);
+        setUser(userData);
+        
         navigate('/dashboard');
       } else {
         setError(data.message || 'Invalid email or password.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Unable to reach Render backend server. Please wait ~30s for the free instance to spin up.');
+      setError('Unable to reach Render backend server. Please wait ~30s for the instance to wake up.');
     } finally {
       setLoading(false);
     }
@@ -84,28 +94,32 @@ function Login({ setToken, setUser }) {
   );
 }
 
-// 2. DASHBOARD COMPONENT
+// ---------------------------------------------------------------------------
+// 3. PROTECTED DASHBOARD COMPONENT
+// ---------------------------------------------------------------------------
 function Dashboard({ user, handleLogout }) {
   return (
     <div style={styles.dashboardLayout}>
       <header style={styles.header}>
         <h1 style={styles.logo}>Insur-Care Portal</h1>
         <div style={styles.userInfo}>
-          <span>Logged in as: {user?.email || 'Admin'}</span>
+          <span>Logged in as: {user?.email || 'Admin User'}</span>
           <button onClick={handleLogout} style={styles.logoutButton}>Sign Out</button>
         </div>
       </header>
-      <main style={{ padding: '32px' }}>
-        <h2>Welcome to Insur-Care Dashboard</h2>
-        <p>You are securely logged in.</p>
+      <main style={styles.mainContent}>
+        <h2>Executive Dashboard</h2>
+        <p>Welcome back! Authentication successfully verified via Render API.</p>
       </main>
     </div>
   );
 }
 
-// 3. MAIN ROUTER & AUTH GUARD
+// ---------------------------------------------------------------------------
+// 4. MAIN APP ROUTER WITH EXPORT DEFAULT
+// ---------------------------------------------------------------------------
 export default function App() {
-  const [token, setToken] = useState(localStorage.getItem('insurcare_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('insurcare_token'));
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('insurcare_user');
     return saved ? JSON.parse(saved) : null;
@@ -135,6 +149,9 @@ export default function App() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// 5. STYLES
+// ---------------------------------------------------------------------------
 const styles = {
   authContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f4f6f8' },
   authCard: { width: '100%', maxWidth: '400px', padding: '30px', borderRadius: '10px', backgroundColor: '#ffffff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' },
@@ -150,9 +167,9 @@ const styles = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', backgroundColor: '#1e293b', color: '#ffffff' },
   logo: { fontSize: '20px', margin: 0 },
   userInfo: { display: 'flex', alignItems: 'center', gap: '16px' },
-  logoutButton: { padding: '6px 12px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer' }
+  logoutButton: { padding: '6px 12px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
+  mainContent: { padding: '32px' }
 };
-
 
 
 
