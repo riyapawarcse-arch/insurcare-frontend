@@ -61,14 +61,14 @@ const USERS = [
 ];
 
 export default function App() {
-  // Authentication State: null means logged out (shows login screen)
-  const [token, setToken] = useState('demo-token');
-  const [user, setUser] = useState(USERS[0]);
+  // Start completely signed out (token: null) and clear of prefilled shortcuts
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Login form inputs
-  const [loginEmail, setLoginEmail] = useState('riya.pawar@insurcare.com');
-  const [loginPassword, setLoginPassword] = useState('password123');
+  // Clean empty inputs for secure manual login
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
 
   // Navigation State
   const [activeTab, setActiveTab] = useState('Claims Desk');
@@ -131,17 +131,29 @@ export default function App() {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
-      const foundUser = USERS.find(u => u.email.toLowerCase() === loginEmail.toLowerCase()) || USERS[0];
-      setUser(foundUser);
-      setToken('active-session-token');
-      setIsLoading(false);
-      showToast(`Welcome back, ${foundUser.name}!`);
+      const foundUser = USERS.find(u => u.email.toLowerCase() === loginEmail.toLowerCase());
+      if (foundUser) {
+        setUser(foundUser);
+        setToken('active-session-token');
+        setIsLoading(false);
+        showToast(`Welcome back, ${foundUser.name}!`);
+      } else {
+        // Fallback or generic authentication for custom inputs
+        const customUser = { name: loginEmail.split('@')[0], role: 'Enterprise User', email: loginEmail, type: 'Custom' };
+        setUser(customUser);
+        setToken('active-session-token');
+        setIsLoading(false);
+        showToast(`Welcome back, ${customUser.name}!`);
+      }
     }, 600);
   };
 
   const handleLogout = () => {
     setToken(null);
-    showToast('Signed out successfully. Redirected to login page.');
+    setUser(null);
+    setLoginEmail('');
+    setLoginPassword('');
+    showToast('Signed out successfully. You have been redirected to the main login page.');
   };
 
   // --- FULLY FUNCTIONAL ACTIONS ---
@@ -215,7 +227,7 @@ export default function App() {
 
   const handleDownloadScriptOrProof = (fileName, scriptContent) => {
     const element = document.createElement("a");
-    const fileContent = `========================================\nINSUR-CARE VERIFIED PROOF & SCRIPT RECORD\n========================================\nFile Name: ${fileName}\nGenerated Timestamp: ${new Date().toLocaleString()}\nLogged User Officer: ${user.name} (${user.role})\n\n[OFFICIAL PROOF SCRIPT DATA]:\n${scriptContent}\n\nStatus: Cryptographically Verified & Secured\n========================================`;
+    const fileContent = `========================================\nINSUR-CARE VERIFIED PROOF & SCRIPT RECORD\n========================================\nFile Name: ${fileName}\nGenerated Timestamp: ${new Date().toLocaleString()}\nLogged User Officer: ${user ? `${user.name} (${user.role})` : 'Guest'}\n\n[OFFICIAL PROOF SCRIPT DATA]:\n${scriptContent}\n\nStatus: Cryptographically Verified & Secured\n========================================`;
     const file = new Blob([fileContent], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = `${fileName.split('.')[0]}_Proof_Script.txt`;
@@ -252,8 +264,8 @@ export default function App() {
     return <div style={styles.loader}>Loading Insur-Care Portal...</div>;
   }
 
-  // --- LOGIN SCREEN (When signed out) ---
-  if (!token) {
+  // --- CLEAN LOGIN SCREEN (Signed Out State - No prefilled mock cards or automatic shortcuts) ---
+  if (!token || !user) {
     return (
       <div style={styles.loginContainer}>
         {toastMessage && (
@@ -291,42 +303,10 @@ export default function App() {
               />
             </div>
 
-            <div style={{ fontSize: '11px', color: '#64748b', backgroundColor: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-              <strong>Quick Demo Sign-in:</strong> Select any account type or use default credentials above and click Sign In.
-            </div>
-
             <button type="submit" style={{ ...styles.actionBlueBtn, padding: '12px', fontSize: '14px', marginTop: '4px' }}>
               Sign In to Portal →
             </button>
           </form>
-
-          <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', fontWeight: 'bold' }}>OR QUICK SELECT TEST USER:</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {USERS.map((u) => (
-                <button
-                  key={u.email}
-                  type="button"
-                  onClick={() => {
-                    setLoginEmail(u.email);
-                    setUser(u);
-                  }}
-                  style={{
-                    textAlign: 'left',
-                    padding: '8px 10px',
-                    borderRadius: '6px',
-                    border: loginEmail === u.email ? '2px solid #2563eb' : '1px solid #e2e8f0',
-                    backgroundColor: loginEmail === u.email ? '#eff6ff' : '#ffffff',
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
-                >
-                  <div style={{ fontWeight: 'bold', color: '#0f172a' }}>{u.name}</div>
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>{u.role}</div>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -1044,7 +1024,6 @@ const styles = {
   selectModal: { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', backgroundColor: '#ffffff', boxSizing: 'border-box' },
   input: { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', width: '100%', boxSizing: 'border-box' }
 };
-
 
               
 
