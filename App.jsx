@@ -1,3 +1,9 @@
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+
+const API_BASE_URL = 'https://insurcare-api.onrender.com/api';
+
+// 1. LOGIN COMPONENT (First screen users see)
 function Login({ setToken, setUser }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,20 +26,17 @@ function Login({ setToken, setUser }) {
       const data = await response.json();
 
       if (response.ok) {
-        // Store session token from Flask JWT backend
-        localStorage.setItem('insurcare_token', data.token || data.access_token);
+        localStorage.setItem('insurcare_token', data.token || 'auth-token');
         localStorage.setItem('insurcare_user', JSON.stringify(data.user || { email }));
-        
-        setToken(data.token || data.access_token);
+        setToken(data.token || 'auth-token');
         setUser(data.user || { email });
-        
         navigate('/dashboard');
       } else {
         setError(data.message || 'Invalid email or password.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Unable to reach Render server. Please wait ~30s for free instance to spin up and try again.');
+      setError('Unable to reach Render backend server. Please wait ~30s for the free instance to spin up.');
     } finally {
       setLoading(false);
     }
@@ -43,7 +46,7 @@ function Login({ setToken, setUser }) {
     <div style={styles.authContainer}>
       <div style={styles.authCard}>
         <h2 style={styles.title}>Insur-Care Portal</h2>
-        <p style={styles.subtitle}>Sign in to manage policies and claims</p>
+        <p style={styles.subtitle}>Sign in to access your dashboard</p>
         
         {error && <div style={styles.errorAlert}>{error}</div>}
 
@@ -80,6 +83,75 @@ function Login({ setToken, setUser }) {
     </div>
   );
 }
+
+// 2. DASHBOARD COMPONENT
+function Dashboard({ user, handleLogout }) {
+  return (
+    <div style={styles.dashboardLayout}>
+      <header style={styles.header}>
+        <h1 style={styles.logo}>Insur-Care Portal</h1>
+        <div style={styles.userInfo}>
+          <span>Logged in as: {user?.email || 'Admin'}</span>
+          <button onClick={handleLogout} style={styles.logoutButton}>Sign Out</button>
+        </div>
+      </header>
+      <main style={{ padding: '32px' }}>
+        <h2>Welcome to Insur-Care Dashboard</h2>
+        <p>You are securely logged in.</p>
+      </main>
+    </div>
+  );
+}
+
+// 3. MAIN ROUTER & AUTH GUARD
+export default function App() {
+  const [token, setToken] = useState(localStorage.getItem('insurcare_token'));
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('insurcare_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('insurcare_token');
+    localStorage.removeItem('insurcare_user');
+    setToken(null);
+    setUser(null);
+  };
+
+  return (
+    <Router>
+      <Routes>
+        <Route 
+          path="/login" 
+          element={!token ? <Login setToken={setToken} setUser={setUser} /> : <Navigate to="/dashboard" />} 
+        />
+        <Route 
+          path="/dashboard" 
+          element={token ? <Dashboard user={user} handleLogout={handleLogout} /> : <Navigate to="/login" />} 
+        />
+        <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
+      </Routes>
+    </Router>
+  );
+}
+
+const styles = {
+  authContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f4f6f8' },
+  authCard: { width: '100%', maxWidth: '400px', padding: '30px', borderRadius: '10px', backgroundColor: '#ffffff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' },
+  title: { margin: '0 0 8px 0', color: '#1a202c', textAlign: 'center' },
+  subtitle: { margin: '0 0 24px 0', color: '#718096', textAlign: 'center', fontSize: '14px' },
+  form: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  inputGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  label: { fontSize: '14px', fontWeight: '600', color: '#4a5568' },
+  input: { padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e0', fontSize: '14px' },
+  primaryButton: { padding: '12px', backgroundColor: '#3182ce', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' },
+  errorAlert: { padding: '10px', backgroundColor: '#fed7d7', color: '#c53030', borderRadius: '6px', fontSize: '13px', marginBottom: '12px' },
+  dashboardLayout: { minHeight: '100vh', backgroundColor: '#f8fafc' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', backgroundColor: '#1e293b', color: '#ffffff' },
+  logo: { fontSize: '20px', margin: 0 },
+  userInfo: { display: 'flex', alignItems: 'center', gap: '16px' },
+  logoutButton: { padding: '6px 12px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer' }
+};
 
 
 
