@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = 'https://insurcare-api.onrender.com/api';
-
-// Initial Mock Data matching the INSUR-CARE PORTAL video
+// Initial Mock Data matching the video and specifications
 const INITIAL_CLAIMS = [
   {
     id: 'CLM-1001',
@@ -47,6 +45,7 @@ const POLICIES = [
   { id: 'POL-11928', name: 'Term Life Assurance Prime', category: 'Life', holder: 'Rohan Gupta', maxSum: '₹20,000,000', premium: '₹36,000', deductible: '₹0', accountId: 'CUST-603', startDate: '2024-01-20', expiryDate: '2027-01-19', status: 'Active' }
 ];
 
+// The exact 3 accounts shown in the top-right profile switcher dropdown video
 const USERS = [
   { name: 'Riya Pawar', role: 'System Admin & Operations Lead', email: 'riya.pawar@insurcare.com', type: 'System' },
   { name: 'Vikram Malhotra', role: 'Corporate Client Admin (Nexus Tech)', email: 'vikram@nexustech.com', type: 'Corporate' },
@@ -58,7 +57,7 @@ export default function App() {
   const [user, setUser] = useState(USERS[0]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Auth States
+  // Auth Form States
   const [accountType, setAccountType] = useState('Company Staff / Admin');
   const [email, setEmail] = useState('riya.pawar@insurcare.com');
   const [password, setPassword] = useState('••••••');
@@ -90,7 +89,7 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const activeUser = USERS.find(u => u.email === email) || { name: email.split('@')[0], role: accountType, email, type: 'Admin' };
+    const activeUser = USERS.find(u => u.email === email) || USERS[0];
     localStorage.setItem('insurcare_token', 'demo-token');
     localStorage.setItem('insurcare_user', JSON.stringify(activeUser));
     setToken('demo-token');
@@ -103,7 +102,7 @@ export default function App() {
     setActiveTab('Dashboard');
   };
 
-  // Claim actions
+  // Claim Actions
   const handleClaimStatusChange = (id, newStatus) => {
     setClaims(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));
   };
@@ -130,7 +129,7 @@ export default function App() {
     return <div style={styles.loader}>Loading Insur-Care Portal...</div>;
   }
 
-  // LOGIN PAGE
+  // SIGN IN SCREEN
   if (!token) {
     return (
       <div style={styles.loginPage}>
@@ -164,7 +163,7 @@ export default function App() {
     );
   }
 
-  // MAIN PORTAL
+  // MAIN PORTAL LAYOUT
   return (
     <div style={styles.appLayout}>
       {/* SIDEBAR */}
@@ -208,7 +207,7 @@ export default function App() {
 
       {/* MAIN CONTENT AREA */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* TOP BAR / HEADER */}
+        {/* TOP BAR / HEADER WITH USER SWITCHER DROPDOWN */}
         <header style={styles.topHeader}>
           <div style={{ display: 'flex', gap: '8px' }}>
             {['Dashboard', 'Claims Desk', 'Customer Directory', 'Policies'].map((tab) => (
@@ -226,11 +225,11 @@ export default function App() {
             ))}
           </div>
 
-          {/* USER SWITCHER DROPDOWN */}
+          {/* TOP RIGHT 3-USER ACCOUNT SWITCHER */}
           <div style={{ position: 'relative' }}>
             <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} style={styles.userDropdownBtn}>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{user.name} ▾</div>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#ffffff' }}>{user.name} ▾</div>
                 <div style={{ fontSize: '10px', color: '#94a3b8' }}>● {user.type}</div>
               </div>
             </button>
@@ -263,7 +262,7 @@ export default function App() {
           </div>
         </header>
 
-        {/* TAB PANELS */}
+        {/* DYNAMIC TAB VIEW PANELS */}
         <main style={styles.mainContainer}>
           {/* 1. EXECUTIVE ANALYTICS DASHBOARD */}
           {activeTab === 'Dashboard' && (
@@ -301,7 +300,6 @@ export default function App() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
-                {/* CLAIMS VOLUME BY CATEGORY */}
                 <div style={styles.panelCard}>
                   <h4 style={{ margin: '0 0 16px 0' }}>Claims Volume Breakdown by Category</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -326,7 +324,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* LIVE SYSTEM ACTIVITY FEED */}
                 <div style={styles.panelCard}>
                   <h4 style={{ margin: '0 0 16px 0' }}>Live System Activity Feed</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
@@ -350,7 +347,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* QUICK ACCESS MODULES */}
               <div style={{ ...styles.panelCard, marginTop: '20px' }}>
                 <h4 style={{ margin: '0 0 16px 0' }}>Portal Module Quick Access</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
@@ -385,7 +381,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* SUMMARY STATS */}
+              {/* SUMMARY METRICS */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
                 <div style={styles.kpiCard}>
                   <span style={styles.kpiLabel}>TOTAL CLAIMS FILE</span>
@@ -597,7 +593,7 @@ export default function App() {
             </div>
           )}
 
-          {/* 4. POLICIES ADMINISTRATION */}
+          {/* 4. POLICY ADMINISTRATION */}
           {activeTab === 'Policies' && (
             <div>
               <div style={styles.topBarFlex}>
@@ -774,7 +770,7 @@ const styles = {
   topHeader: { height: '56px', backgroundColor: '#0b1329', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 24px', borderBottom: '1px solid #1e293b' },
   topNavTab: { padding: '8px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' },
   userDropdownBtn: { background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' },
-  profileDropdownMenu: { position: 'absolute', right: 0, top: '45px', width: '260px', backgroundColor: '#ffffff', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', border: '1px solid #e2e8f0', zIndex: 100 },
+  profileDropdownMenu: { position: 'absolute', right: 24, top: '48px', width: '280px', backgroundColor: '#ffffff', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', border: '1px solid #e2e8f0', zIndex: 100 },
   dropdownUserOption: { width: '100%', textAlign: 'left', padding: '10px 12px', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9' },
 
   mainContainer: { flex: 1, padding: '24px', overflowY: 'auto' },
@@ -806,6 +802,7 @@ const styles = {
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
   modalBox: { backgroundColor: '#ffffff', width: '450px', borderRadius: '12px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }
 };
+
 
               
 
