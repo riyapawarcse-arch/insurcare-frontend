@@ -61,9 +61,14 @@ const USERS = [
 ];
 
 export default function App() {
+  // Authentication State: null means logged out (shows login screen)
   const [token, setToken] = useState('demo-token');
   const [user, setUser] = useState(USERS[0]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Login form inputs
+  const [loginEmail, setLoginEmail] = useState('riya.pawar@insurcare.com');
+  const [loginPassword, setLoginPassword] = useState('password123');
 
   // Navigation State
   const [activeTab, setActiveTab] = useState('Claims Desk');
@@ -122,9 +127,21 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setTimeout(() => {
+      const foundUser = USERS.find(u => u.email.toLowerCase() === loginEmail.toLowerCase()) || USERS[0];
+      setUser(foundUser);
+      setToken('active-session-token');
+      setIsLoading(false);
+      showToast(`Welcome back, ${foundUser.name}!`);
+    }, 600);
+  };
+
   const handleLogout = () => {
     setToken(null);
-    showToast('Signed out successfully.');
+    showToast('Signed out successfully. Redirected to login page.');
   };
 
   // --- FULLY FUNCTIONAL ACTIONS ---
@@ -233,6 +250,86 @@ export default function App() {
 
   if (isLoading) {
     return <div style={styles.loader}>Loading Insur-Care Portal...</div>;
+  }
+
+  // --- LOGIN SCREEN (When signed out) ---
+  if (!token) {
+    return (
+      <div style={styles.loginContainer}>
+        {toastMessage && (
+          <div style={styles.toastNotification}>
+            🔔 {toastMessage}
+          </div>
+        )}
+        <div style={styles.loginCard}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <h2 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '22px' }}>🛡️ INSUR-CARE PORTAL</h2>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>Sign in to your enterprise account</p>
+          </div>
+
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={styles.miniLabel}>EMAIL ADDRESS</label>
+              <input
+                type="email"
+                required
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                style={styles.inputModal}
+                placeholder="name@insurcare.com"
+              />
+            </div>
+            <div>
+              <label style={styles.miniLabel}>PASSWORD</label>
+              <input
+                type="password"
+                required
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                style={styles.inputModal}
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div style={{ fontSize: '11px', color: '#64748b', backgroundColor: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+              <strong>Quick Demo Sign-in:</strong> Select any account type or use default credentials above and click Sign In.
+            </div>
+
+            <button type="submit" style={{ ...styles.actionBlueBtn, padding: '12px', fontSize: '14px', marginTop: '4px' }}>
+              Sign In to Portal →
+            </button>
+          </form>
+
+          <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', fontWeight: 'bold' }}>OR QUICK SELECT TEST USER:</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {USERS.map((u) => (
+                <button
+                  key={u.email}
+                  type="button"
+                  onClick={() => {
+                    setLoginEmail(u.email);
+                    setUser(u);
+                  }}
+                  style={{
+                    textAlign: 'left',
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    border: loginEmail === u.email ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                    backgroundColor: loginEmail === u.email ? '#eff6ff' : '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold', color: '#0f172a' }}>{u.name}</div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>{u.role}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -895,6 +992,9 @@ const styles = {
 
   toastNotification: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#0f172a', color: '#ffffff', padding: '12px 20px', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', border: '1px solid #334155', zIndex: 9999, fontSize: '13px', fontWeight: 'bold' },
 
+  loginContainer: { minHeight: '100vh', display: 'grid', placeItems: 'center', backgroundColor: '#0b1329', padding: '20px', fontFamily: 'system-ui, sans-serif' },
+  loginCard: { backgroundColor: '#ffffff', width: '100%', maxWidth: '400px', borderRadius: '12px', padding: '32px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' },
+
   appLayout: { display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'system-ui, sans-serif' },
   sidebar: { width: '240px', backgroundColor: '#0b1329', color: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '20px 16px', flexShrink: 0 },
   brandHeader: { paddingBottom: '16px', borderBottom: '1px solid #1e293b', marginBottom: '16px' },
@@ -944,7 +1044,6 @@ const styles = {
   selectModal: { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', backgroundColor: '#ffffff', boxSizing: 'border-box' },
   input: { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', width: '100%', boxSizing: 'border-box' }
 };
-
 
 
               
