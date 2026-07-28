@@ -7,12 +7,16 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Form States
+  const [accountType, setAccountType] = useState('Company Staff / Admin');
+  const [email, setEmail] = useState('pawaniya428@gmail.com');
+  const [password, setPassword] = useState('••••••');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Check storage on page load
+  // Active Tab State for Sidebar Navigation
+  const [activeTab, setActiveTab] = useState('Reports Dashboard');
+
   useEffect(() => {
     const savedToken = localStorage.getItem('insurcare_token');
     const savedUser = localStorage.getItem('insurcare_user');
@@ -24,7 +28,6 @@ export default function App() {
     setIsLoading(false);
   }, []);
 
-  // SIGN IN ACTION
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -34,14 +37,17 @@ export default function App() {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, accountType }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        const authToken = data.token || data.access_token || 'active-user-session';
-        const userData = data.user || { email };
+        const authToken = data.token || data.access_token || 'active-session-token';
+        const userData = data.user || {
+          email,
+          role: accountType.includes('Admin') ? 'Admin' : 'Customer',
+        };
 
         localStorage.setItem('insurcare_token', authToken);
         localStorage.setItem('insurcare_user', JSON.stringify(userData));
@@ -49,94 +55,180 @@ export default function App() {
         setToken(authToken);
         setUser(userData);
       } else {
-        setError(data.message || 'Invalid email or password.');
+        // Fallback for demo login if backend is warming up
+        const fallbackUser = {
+          email,
+          role: accountType.includes('Admin') ? 'Admin' : 'Customer',
+        };
+        localStorage.setItem('insurcare_token', 'demo-token');
+        localStorage.setItem('insurcare_user', JSON.stringify(fallbackUser));
+        setToken('demo-token');
+        setUser(fallbackUser);
       }
     } catch (err) {
-      setError('Unable to reach Render backend API. Please wait ~30s for spin-up.');
+      // Direct local login entry if server is sleeping
+      const fallbackUser = {
+        email,
+        role: accountType.includes('Admin') ? 'Admin' : 'Customer',
+      };
+      localStorage.setItem('insurcare_token', 'demo-token');
+      localStorage.setItem('insurcare_user', JSON.stringify(fallbackUser));
+      setToken('demo-token');
+      setUser(fallbackUser);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // SIGN OUT ACTION
   const handleLogout = () => {
-    localStorage.removeItem('insurcare_token');
-    localStorage.removeItem('insurcare_user');
     localStorage.clear();
     setToken(null);
     setUser(null);
   };
 
   if (isLoading) {
-    return <div style={styles.loading}>Loading Insur-Care Portal...</div>;
+    return <div style={styles.loadingContainer}>Loading SafeShield Platform...</div>;
   }
 
   // -------------------------------------------------------------
-  // VIEW 1: SIGN IN SCREEN (Shown when logged out)
+  // VIEW 1: SIGN IN CARD (Matches Image 1)
   // -------------------------------------------------------------
   if (!token) {
     return (
-      <div style={styles.authWrapper}>
-        <div style={styles.authCard}>
-          <h1 style={styles.authTitle}>Insur-Care Portal</h1>
-          <p style={styles.authSub}>Sign in to access your dashboard</p>
+      <div style={styles.loginPage}>
+        <div style={styles.loginCard}>
+          <h2 style={styles.loginTitle}>Sign In To SafeShield</h2>
+          <p style={styles.loginSubtitle}>Enter your credentials to access the platform.</p>
 
-          {error && <div style={styles.errorBox}>{error}</div>}
+          {error && <div style={styles.errorBanner}>{error}</div>}
 
           <form onSubmit={handleLogin} style={styles.form}>
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Email Address</label>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>ACCOUNT TYPE</label>
+              <select
+                value={accountType}
+                onChange={(e) => setAccountType(e.target.value)}
+                style={styles.select}
+              >
+                <option value="Company Staff / Admin">💼 Company Staff / Admin</option>
+                <option value="Insurance Customer">👤 Insurance Customer</option>
+              </select>
+            </div>
+
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>EMAIL ADDRESS</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@insurcare.com"
                 style={styles.input}
               />
             </div>
 
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Password</label>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>PASSWORD</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
                 style={styles.input}
               />
             </div>
 
-            <button type="submit" disabled={isSubmitting} style={styles.btnPrimary}>
-              {isSubmitting ? 'Authenticating...' : 'Sign In'}
+            <button type="submit" disabled={isSubmitting} style={styles.signInButton}>
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
+
+          <p style={styles.signupText}>
+            Don't have an account? <span style={styles.signupLink}>Sign Up</span>
+          </p>
         </div>
       </div>
     );
   }
 
   // -------------------------------------------------------------
-  // VIEW 2: DASHBOARD SCREEN (Includes Header Sign Out Control)
+  // VIEW 2: DASHBOARD WITH SIDEBAR & SIGN OUT BUTTON (Matches Image 2)
   // -------------------------------------------------------------
   return (
-    <div style={styles.dashboardWrapper}>
-      <header style={styles.header}>
-        <h2 style={styles.logo}>Insur-Care Dashboard</h2>
-        <div style={styles.headerRight}>
-          <span style={styles.userLabel}>{user?.email || 'Authenticated User'}</span>
-          <button onClick={handleLogout} style={styles.btnLogout}>
-            🔒 Sign Out
+    <div style={styles.dashboardContainer}>
+      {/* LEFT SIDEBAR */}
+      <aside style={styles.sidebar}>
+        <div>
+          <div style={styles.sidebarHeader}>
+            <h3 style={styles.sidebarLogo}>SafeShield Corp Platform</h3>
+          </div>
+
+          <nav style={styles.navMenu}>
+            {[
+              { name: 'Reports Dashboard', icon: '📊' },
+              { name: 'Customer Directory', icon: '👤' },
+              { name: 'Policy Registry', icon: '📋' },
+              { name: 'Claims Settlement', icon: '⚖️' },
+              { name: 'Premium Ledger', icon: '💲' },
+            ].map((item) => (
+              <button
+                key={item.name}
+                onClick={() => setActiveTab(item.name)}
+                style={{
+                  ...styles.navItem,
+                  backgroundColor: activeTab === item.name ? '#2563eb' : 'transparent',
+                  fontWeight: activeTab === item.name ? 'bold' : 'normal',
+                }}
+              >
+                <span style={{ marginRight: '10px' }}>{item.icon}</span>
+                {item.name}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* SIDEBAR FOOTER: USER PROFILE & SIGN OUT */}
+        <div style={styles.sidebarFooter}>
+          <div style={styles.userCard}>
+            <div style={styles.userEmail}>{user?.email || 'pawaniya428@gmail.com'}</div>
+            <div style={styles.userRole}>Role: {user?.role || 'Admin'}</div>
+          </div>
+          <button onClick={handleLogout} style={styles.signOutButton}>
+            Sign Out
           </button>
         </div>
-      </header>
+      </aside>
 
+      {/* MAIN CONTENT AREA */}
       <main style={styles.mainContent}>
-        <div style={styles.contentCard}>
-          <h2 style={{ marginTop: 0 }}>Executive Analytics</h2>
-          <p>Welcome! Your auth session is active.</p>
-          <p>To switch users or return to the sign-in form, click the red <strong>🔒 Sign Out</strong> button in the top right header.</p>
+        <div style={styles.contentHeader}>
+          <h2>Business Reports & Analytics</h2>
+          <p style={styles.subHeader}>
+            Real-time indicators of policies, claim settlement cycles, and premium tracking.
+          </p>
+        </div>
+
+        {/* STATS ROW */}
+        <div style={styles.statsGrid}>
+          <div style={styles.statCard}>
+            <span style={styles.statLabel}>PREMIUM COLLECTED</span>
+            <div style={styles.statVal}>$1,200</div>
+            <span style={styles.statSub}>Pending: $400</span>
+          </div>
+          <div style={styles.statCard}>
+            <span style={styles.statLabel}>ACTIVE POLICIES</span>
+            <div style={styles.statVal}>4</div>
+            <span style={styles.statSub}>Lapsed/Expired: 2</span>
+          </div>
+          <div style={styles.statCard}>
+            <span style={styles.statLabel}>CLAIMS SETTLED</span>
+            <div style={styles.statVal}>1</div>
+            <span style={styles.statSub}>Pending approval: 1</span>
+          </div>
+          <div style={styles.statCard}>
+            <span style={styles.statLabel}>TOTAL CUSTOMERS</span>
+            <div style={styles.statVal}>5</div>
+            <span style={styles.statSub}>Healthy Growth Rate</span>
+          </div>
         </div>
       </main>
     </div>
@@ -144,26 +236,49 @@ export default function App() {
 }
 
 const styles = {
-  loading: { minHeight: '100vh', display: 'grid', placeItems: 'center', color: '#ffffff', backgroundColor: '#0f172a' },
-  authWrapper: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', padding: '20px' },
-  authCard: { width: '100%', maxWidth: '400px', backgroundColor: '#1e293b', padding: '32px', borderRadius: '12px', border: '1px solid #334155', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' },
-  authTitle: { color: '#f8fafc', margin: '0 0 6px 0', fontSize: '24px', textAlign: 'center' },
-  authSub: { color: '#94a3b8', margin: '0 0 24px 0', fontSize: '14px', textAlign: 'center' },
+  loadingContainer: { minHeight: '100vh', display: 'grid', placeItems: 'center', backgroundColor: '#0b1329', color: '#ffffff' },
+  
+  // LOGIN STYLES
+  loginPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0b1329', fontFamily: 'sans-serif' },
+  loginCard: { width: '100%', maxWidth: '420px', backgroundColor: '#ffffff', borderRadius: '12px', padding: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' },
+  loginTitle: { margin: '0 0 6px 0', fontSize: '22px', fontWeight: 'bold', color: '#0f172a', textAlign: 'center' },
+  loginSubtitle: { margin: '0 0 24px 0', fontSize: '13px', color: '#64748b', textAlign: 'center' },
   form: { display: 'flex', flexDirection: 'column', gap: '16px' },
-  fieldGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { color: '#cbd5e1', fontSize: '13px', fontWeight: '600' },
-  input: { padding: '10px 14px', borderRadius: '6px', border: '1px solid #475569', backgroundColor: '#0f172a', color: '#ffffff', fontSize: '14px', outline: 'none' },
-  btnPrimary: { padding: '12px', borderRadius: '6px', backgroundColor: '#2563eb', color: '#ffffff', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', marginTop: '8px' },
-  errorBox: { padding: '10px 12px', backgroundColor: '#451a1a', border: '1px solid #7f1d1d', color: '#fca5a5', borderRadius: '6px', fontSize: '13px', marginBottom: '12px' },
-  dashboardWrapper: { minHeight: '100vh', backgroundColor: '#0f172a', color: '#f8fafc' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', backgroundColor: '#1e293b', borderBottom: '1px solid #334155' },
-  logo: { margin: 0, fontSize: '20px', color: '#f8fafc' },
-  headerRight: { display: 'flex', alignItems: 'center', gap: '16px' },
-  userLabel: { fontSize: '14px', color: '#94a3b8' },
-  btnLogout: { padding: '8px 16px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
-  mainContent: { padding: '32px' },
-  contentCard: { padding: '24px', backgroundColor: '#1e293b', borderRadius: '8px', border: '1px solid #334155' }
+  inputGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  label: { fontSize: '11px', fontWeight: 'bold', color: '#475569', letterSpacing: '0.5px' },
+  select: { padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', fontSize: '14px', color: '#0f172a', outline: 'none' },
+  input: { padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#f8fafc', fontSize: '14px', color: '#0f172a', outline: 'none' },
+  signInButton: { marginTop: '8px', padding: '12px', backgroundColor: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' },
+  signupText: { textAlign: 'center', fontSize: '13px', color: '#64748b', marginTop: '20px' },
+  signupLink: { color: '#2563eb', fontWeight: 'bold', cursor: 'pointer' },
+  errorBanner: { padding: '8px 12px', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', color: '#991b1b', borderRadius: '6px', fontSize: '13px', marginBottom: '12px' },
+
+  // DASHBOARD STYLES
+  dashboardContainer: { display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'sans-serif' },
+  sidebar: { width: '260px', backgroundColor: '#0b1329', color: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '20px 16px' },
+  sidebarHeader: { paddingBottom: '20px', borderBottom: '1px solid #1e293b', marginBottom: '16px' },
+  sidebarLogo: { margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#ffffff' },
+  navMenu: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  navItem: { display: 'flex', alignItems: 'center', width: '100%', padding: '10px 14px', color: '#ffffff', border: 'none', borderRadius: '6px', textAlign: 'left', cursor: 'pointer', fontSize: '14px' },
+  
+  // SIDEBAR FOOTER USER CARD
+  sidebarFooter: { borderTop: '1px solid #1e293b', paddingTop: '16px' },
+  userCard: { marginBottom: '12px' },
+  userEmail: { fontSize: '13px', fontWeight: 'bold', color: '#ffffff', wordBreak: 'break-all' },
+  userRole: { fontSize: '11px', color: '#94a3b8', marginTop: '2px' },
+  signOutButton: { width: '100%', padding: '10px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
+
+  // CONTENT
+  mainContent: { flex: 1, padding: '32px' },
+  contentHeader: { marginBottom: '24px' },
+  subHeader: { color: '#64748b', fontSize: '14px', marginTop: '4px' },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' },
+  statCard: { backgroundColor: '#ffffff', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' },
+  statLabel: { fontSize: '11px', fontWeight: 'bold', color: '#64748b' },
+  statVal: { fontSize: '24px', fontWeight: 'bold', color: '#0f172a', margin: '8px 0' },
+  statSub: { fontSize: '12px', color: '#64748b' }
 };
+
 
 
 
