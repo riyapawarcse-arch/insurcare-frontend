@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Initial Mock Data matching the full interactive requirements
+// Initial Mock Data with robust proof and documentation links
 const INITIAL_CLAIMS = [
   {
     id: 'CLM-1001',
@@ -9,9 +9,10 @@ const INITIAL_CLAIMS = [
     payout: 45000,
     status: 'Pending',
     date: '2026-02-10',
-    description: 'Medical reimbursement for emergency hospitalization at Max Healthcare',
+    description: 'Medical reimbursement for emergency hospitalization at Max Healthcare. Attached official hospital discharge summary and pharmacy itemized bill.',
     proofUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80',
-    proofName: 'Hospitalization_Bill_Max_Healthcare.pdf'
+    proofName: 'Hospitalization_Bill_Max_Healthcare.pdf',
+    proofScript: 'VERIFIED_SCRIPT: Hospital admission verified via API Gateway. Patient ID: MAX-9921. Diagnosis: Acute Gastroenteritis. Total Bill Verified: INR 45,000.'
   },
   {
     id: 'CLM-1002',
@@ -20,9 +21,10 @@ const INITIAL_CLAIMS = [
     payout: 12500,
     status: 'Approved',
     date: '2026-02-08',
-    description: 'Dental procedure reimbursement and routine consultation fees.',
+    description: 'Dental procedure reimbursement and routine consultation fees at Delhi Dental Care Center.',
     proofUrl: 'https://images.unsplash.com/photo-1606811841689-23dfddce6395?auto=format&fit=crop&w=800&q=80',
-    proofName: 'Dental_Invoice_Receipt_Dr_Gupta.pdf'
+    proofName: 'Dental_Invoice_Receipt_Dr_Gupta.pdf',
+    proofScript: 'VERIFIED_SCRIPT: Dental surgical extraction and root canal therapy codes validated by Dr. Gupta (Reg. #DL-44192). Payout approved.'
   },
   {
     id: 'CLM-1003',
@@ -31,20 +33,21 @@ const INITIAL_CLAIMS = [
     payout: 28000,
     status: 'Rejected',
     date: '2026-02-05',
-    description: 'Outpatient surgical claim submitted past coverage window.',
+    description: 'Outpatient surgical claim submitted past coverage window limit.',
     proofUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80',
-    proofName: 'Outpatient_Surgery_Invoice.pdf'
+    proofName: 'Outpatient_Surgery_Invoice.pdf',
+    proofScript: 'AUDIT_FLAG: Submission timestamp exceeds 30-day grace period following outpatient procedure. Claim rejected per policy clause 14.2.'
   }
 ];
 
-const CUSTOMERS = [
+const INITIAL_CUSTOMERS = [
   { id: 'CUST-601', company: 'Nexus Tech Solutions', admin: 'Vikram Malhotra', email: 'vikram@nexustech.com', phone: '+91 98765 43210', activePolicies: 4, coverage: '₹1,80,000,000', status: 'Active' },
   { id: 'CUST-602', company: 'Apex Logistics India', admin: 'Ananya Deshmukh', email: 'ananya.d@apexlogistics.in', phone: '+91 98112 33445', activePolicies: 2, coverage: '₹70,000,000', status: 'Active' },
   { id: 'CUST-603', company: 'Zenith Retail Corp', admin: 'Siddharth Rao', email: 's.rao@zenithretail.com', phone: '+91 97110 99887', activePolicies: 0, coverage: '₹0', status: 'Inactive' },
   { id: 'CUST-604', company: 'Vanguard Infra Projects', admin: 'Meera Kapoor', email: 'meera.k@vanguardinfra.com', phone: '+91 99554 11223', activePolicies: 6, coverage: '₹3,20,000,000', status: 'Active' }
 ];
 
-const POLICIES = [
+const INITIAL_POLICIES = [
   { id: 'POL-88219', name: 'Comprehensive Gold Shield', category: 'Health', holder: 'Aarav Sharma', maxSum: '₹10,000,000', premium: '₹24,500', deductible: '₹5,000', accountId: 'CUST-601', startDate: '2025-02-15', expiryDate: '2027-02-14', status: 'Active' },
   { id: 'POL-33109', name: 'DriveProtect Zero-Dep', category: 'Motor', holder: 'Aarav Sharma', maxSum: '₹800,000', premium: '₹12,000', deductible: '₹1,000', accountId: 'CUST-601', startDate: '2025-06-01', expiryDate: '2026-05-31', status: 'Active' },
   { id: 'POL-44102', name: 'Family Dental & Care', category: 'Health', holder: 'Priya Verma', maxSum: '₹500,000', premium: '₹14,200', deductible: '₹2,000', accountId: 'CUST-602', startDate: '2024-11-01', expiryDate: '2026-10-31', status: 'Active' },
@@ -58,20 +61,18 @@ const USERS = [
 ];
 
 export default function App() {
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState('demo-token');
   const [user, setUser] = useState(USERS[0]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Auth States
-  const [accountType, setAccountType] = useState('Company Staff / Admin');
-  const [email, setEmail] = useState('riya.pawar@insurcare.com');
-  const [password, setPassword] = useState('••••••');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [activeTab, setActiveTab] = useState('Claims Desk');
 
-  // Interactive App States
+  // Core Data States (Fully Mutable & Interactive)
   const [claims, setClaims] = useState(INITIAL_CLAIMS);
+  const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
+  const [policies, setPolicies] = useState(INITIAL_POLICIES);
+
   const [selectedClaimId, setSelectedClaimId] = useState('CLM-1001');
   const [claimFilter, setClaimFilter] = useState('All');
   
@@ -89,43 +90,45 @@ export default function App() {
   const [isNewPolicyModalOpen, setIsNewPolicyModalOpen] = useState(false);
   const [proofViewerDoc, setProofViewerDoc] = useState(null);
 
-  // New Form Inputs
-  const [newClaimForm, setNewClaimForm] = useState({ applicant: '', policyId: 'POL-88219', payout: '', description: '', proofName: 'Medical_Receipt.pdf' });
-  const [newCompanyForm, setNewCompanyForm] = useState({ company: '', admin: '', email: '', phone: '', coverage: '₹10,000,000' });
-  const [newPolicyForm, setNewPolicyForm] = useState({ name: '', category: 'Health', holder: '', maxSum: '₹5,000,000', premium: '₹15,000', deductible: '₹2,000' });
+  // Form Inputs for New Entries
+  const [newClaimForm, setNewClaimForm] = useState({
+    applicant: '',
+    policyId: 'POL-88219',
+    payout: '',
+    description: '',
+    proofName: 'Hospital_Discharge_Summary.pdf',
+    proofScript: 'VERIFIED_SCRIPT: Emergency medical admission script automatically verified by third-party hospital network.'
+  });
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('insurcare_token');
-    const savedUser = localStorage.getItem('insurcare_user');
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
-  }, []);
+  const [newCompanyForm, setNewCompanyForm] = useState({
+    company: '',
+    admin: '',
+    email: '',
+    phone: '',
+    coverage: '₹10,000,000'
+  });
+
+  const [newPolicyForm, setNewPolicyForm] = useState({
+    name: '',
+    category: 'Health',
+    holder: '',
+    maxSum: '₹5,000,000',
+    premium: '₹15,000',
+    deductible: '₹2,000'
+  });
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    const activeUser = USERS.find(u => u.email === email) || USERS[0];
-    localStorage.setItem('insurcare_token', 'demo-token');
-    localStorage.setItem('insurcare_user', JSON.stringify(activeUser));
-    setToken('demo-token');
-    setUser(activeUser);
-    showToast(`Successfully signed in as ${activeUser.name}`);
-  };
-
   const handleLogout = () => {
-    localStorage.clear();
     setToken(null);
-    setActiveTab('Dashboard');
+    showToast('Signed out successfully.');
   };
 
-  // Fully Interactive Actions
+  // --- FULLY FUNCTIONAL ACTIONS ---
+
   const handleClaimStatusChange = (id, newStatus) => {
     setClaims(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));
     showToast(`Claim ${id} status updated to ${newStatus}`);
@@ -141,21 +144,22 @@ export default function App() {
       payout: Number(newClaimForm.payout) || 15000,
       status: 'Pending',
       date: new Date().toISOString().split('T')[0],
-      description: newClaimForm.description || 'Newly submitted documentation for claim review.',
+      description: newClaimForm.description || 'Newly submitted documentation and proof for review.',
       proofUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80',
-      proofName: newClaimForm.proofName
+      proofName: newClaimForm.proofName,
+      proofScript: newClaimForm.proofScript
     };
     setClaims([newEntry, ...claims]);
     setSelectedClaimId(newId);
     setIsNewClaimModalOpen(false);
-    setNewClaimForm({ applicant: '', policyId: 'POL-88219', payout: '', description: '', proofName: 'Medical_Receipt.pdf' });
-    showToast(`New Claim ${newId} submitted successfully!`);
+    setNewClaimForm({ applicant: '', policyId: 'POL-88219', payout: '', description: '', proofName: 'Hospital_Discharge_Summary.pdf', proofScript: 'VERIFIED_SCRIPT: Hospital proof script uploaded.' });
+    showToast(`Claim ${newId} submitted successfully with proof documentation!`);
   };
 
   const handleCreateCompanySubmit = (e) => {
     e.preventDefault();
     const newCust = {
-      id: `CUST-60${CUSTOMERS.length + 1}`,
+      id: `CUST-60${customers.length + 1}`,
       company: newCompanyForm.company,
       admin: newCompanyForm.admin,
       email: newCompanyForm.email,
@@ -164,10 +168,10 @@ export default function App() {
       coverage: newCompanyForm.coverage,
       status: 'Active'
     };
-    CUSTOMERS.push(newCust);
+    setCustomers([newCust, ...customers]);
     setIsNewCompanyModalOpen(false);
     setNewCompanyForm({ company: '', admin: '', email: '', phone: '', coverage: '₹10,000,000' });
-    showToast(`Company account ${newCust.company} created successfully!`);
+    showToast(`Company account "${newCust.company}" added successfully!`);
   };
 
   const handleCreatePolicySubmit = (e) => {
@@ -180,32 +184,33 @@ export default function App() {
       maxSum: newPolicyForm.maxSum,
       premium: newPolicyForm.premium,
       deductible: newPolicyForm.deductible,
-      accountId: 'CUST-601',
+      accountId: customers[0]?.id || 'CUST-601',
       startDate: new Date().toISOString().split('T')[0],
       expiryDate: '2027-02-14',
       status: 'Active'
     };
-    POLICIES.push(newPol);
+    setPolicies([newPol, ...policies]);
     setSelectedPolicyId(newPol.id);
     setIsNewPolicyModalOpen(false);
     setNewPolicyForm({ name: '', category: 'Health', holder: '', maxSum: '₹5,000,000', premium: '₹15,000', deductible: '₹2,000' });
     showToast(`Policy ${newPol.id} issued successfully!`);
   };
 
-  const handleDownloadScriptOrProof = (fileName) => {
+  const handleDownloadScriptOrProof = (fileName, scriptContent) => {
     const element = document.createElement("a");
-    const file = new Blob([`INSUR-CARE PORTAL - VERIFIED AUDIT & PROOF DOCUMENT\nFile Name: ${fileName}\nTimestamp: ${new Date().toLocaleString()}\nStatus: Cryptographically Verified & Approved`], {type: 'text/plain'});
+    const fileContent = `========================================\nINSUR-CARE VERIFIED PROOF & SCRIPT RECORD\n========================================\nFile Name: ${fileName}\nGenerated Timestamp: ${new Date().toLocaleString()}\nLogged User Officer: ${user.name} (${user.role})\n\n[OFFICIAL PROOF SCRIPT DATA]:\n${scriptContent}\n\nStatus: Cryptographically Verified & Secured\n========================================`;
+    const file = new Blob([fileContent], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `${fileName.split('.')[0]}_Verified_Copy.txt`;
+    element.download = `${fileName.split('.')[0]}_Proof_Script.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
-    showToast(`Downloaded verified document: ${fileName}`);
+    showToast(`Successfully downloaded proof script for: ${fileName}`);
   };
 
   const handlePrintDocument = (docTitle) => {
     window.print();
-    showToast(`Print command sent for: ${docTitle}`);
+    showToast(`Print job successfully dispatched for: ${docTitle}`);
   };
 
   const selectedClaim = claims.find(c => c.id === selectedClaimId) || claims[0];
@@ -216,7 +221,7 @@ export default function App() {
 
   const filteredClaims = claims.filter(c => claimFilter === 'All' ? true : c.status === claimFilter);
 
-  const filteredPolicies = POLICIES.filter(p => {
+  const filteredPolicies = policies.filter(p => {
     const matchesCategory = policyCategoryFilter === 'All' ? true : p.category === policyCategoryFilter;
     const matchesSearch = p.name.toLowerCase().includes(policySearch.toLowerCase()) || 
                           p.holder.toLowerCase().includes(policySearch.toLowerCase()) || 
@@ -224,44 +229,10 @@ export default function App() {
     return matchesCategory && matchesSearch;
   });
 
-  const selectedPolicy = POLICIES.find(p => p.id === selectedPolicyId) || POLICIES[0];
+  const selectedPolicy = policies.find(p => p.id === selectedPolicyId) || policies[0];
 
   if (isLoading) {
     return <div style={styles.loader}>Loading Insur-Care Portal...</div>;
-  }
-
-  // SIGN IN SCREEN
-  if (!token) {
-    return (
-      <div style={styles.loginPage}>
-        <div style={styles.loginCard}>
-          <h2 style={styles.loginTitle}>Sign In To SafeShield</h2>
-          <p style={styles.loginSubtitle}>Enter your credentials to access the platform.</p>
-
-          <form onSubmit={handleLogin} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <label style={styles.inputLabel}>ACCOUNT TYPE</label>
-              <select value={accountType} onChange={(e) => setAccountType(e.target.value)} style={styles.select}>
-                <option value="Company Staff / Admin">💼 Company Staff / Admin</option>
-                <option value="Insurance Customer">👤 Insurance Customer</option>
-              </select>
-            </div>
-
-            <div style={styles.inputGroup}>
-              <label style={styles.inputLabel}>EMAIL ADDRESS</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={styles.input} />
-            </div>
-
-            <div style={styles.inputGroup}>
-              <label style={styles.inputLabel}>PASSWORD</label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} style={styles.input} />
-            </div>
-
-            <button type="submit" style={styles.signInBtn}>Sign In</button>
-          </form>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -332,7 +303,7 @@ export default function App() {
             ))}
           </div>
 
-          {/* TOP RIGHT 3-USER ACCOUNT SWITCHER */}
+          {/* TOP RIGHT USER ACCOUNT SWITCHER */}
           <div style={{ position: 'relative' }}>
             <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} style={styles.userDropdownBtn}>
               <div style={{ textAlign: 'right' }}>
@@ -344,15 +315,14 @@ export default function App() {
             {isProfileMenuOpen && (
               <div style={styles.profileDropdownMenu}>
                 <div style={{ padding: '8px 12px', fontSize: '11px', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
-                  CURRENTLY SIGNED IN AS<br /><strong style={{ color: '#0f172a', fontSize: '12px' }}>{user.name}</strong>
+                  CURRENT ACTIVE USER<br /><strong style={{ color: '#0f172a', fontSize: '12px' }}>{user.name}</strong>
                 </div>
-                <div style={{ padding: '6px 12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8' }}>SWITCH ACTIVE USER ACCOUNT:</div>
+                <div style={{ padding: '6px 12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8' }}>SWITCH ACCOUNT:</div>
                 {USERS.map((u) => (
                   <button
                     key={u.email}
                     onClick={() => {
                       setUser(u);
-                      localStorage.setItem('insurcare_user', JSON.stringify(u));
                       setIsProfileMenuOpen(false);
                       showToast(`Switched active user to ${u.name}`);
                     }}
@@ -378,105 +348,61 @@ export default function App() {
               <div style={styles.topBarFlex}>
                 <div>
                   <h2 style={styles.pageTitle}>Executive Analytics Dashboard</h2>
-                  <p style={styles.pageSubtitle}>High-level performance metrics, loss ratio analysis, and live system activity.</p>
+                  <p style={styles.pageSubtitle}>High-level performance metrics and live system activity.</p>
                 </div>
                 <button onClick={() => setActiveTab('Claims Desk')} style={styles.actionBlueBtn}>Go to Claims Desk →</button>
               </div>
 
               <div style={styles.kpiGrid}>
                 <div style={styles.kpiCard}>
-                  <span style={styles.kpiLabel}>TOTAL PREMIUMS BOUND</span>
-                  <div style={styles.kpiVal}>₹86,700</div>
-                  <span style={styles.tagGreen}>● {POLICIES.length} Active Policies</span>
+                  <span style={styles.kpiLabel}>TOTAL POLICIES</span>
+                  <div style={styles.kpiVal}>{policies.length} Active</div>
+                  <span style={styles.tagGreen}>● Bound & Operational</span>
                 </div>
                 <div style={styles.kpiCard}>
-                  <span style={styles.kpiLabel}>TOTAL CLAIMS VOLUME</span>
-                  <div style={styles.kpiVal}>₹85,500</div>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>{claims.length} Claims Filed</span>
+                  <span style={styles.kpiLabel}>CLAIMS VOLUME</span>
+                  <div style={styles.kpiVal}>{claims.length} Filed</div>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Pending & Resolved</span>
                 </div>
                 <div style={styles.kpiCard}>
-                  <span style={styles.kpiLabel}>NET LOSS RATIO</span>
-                  <div style={{ ...styles.kpiVal, color: '#dc2626' }}>98.6%</div>
-                  <span style={{ fontSize: '11px', color: '#dc2626', fontWeight: 'bold' }}>▲ High payout volume</span>
+                  <span style={styles.kpiLabel}>PENDING PAYOUTS</span>
+                  <div style={{ ...styles.kpiVal, color: '#b45309' }}>₹{pendingPayoutTotal.toLocaleString()}</div>
+                  <span style={{ fontSize: '11px', color: '#b45309', fontWeight: 'bold' }}>Requires officer audit</span>
                 </div>
                 <div style={styles.kpiCard}>
-                  <span style={styles.kpiLabel}>NET UNDERWRITING PROFIT</span>
-                  <div style={{ ...styles.kpiVal, color: '#16a34a' }}>₹1,200</div>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>Gross earned margin</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
-                <div style={styles.panelCard}>
-                  <h4 style={{ margin: '0 0 16px 0' }}>Claims Volume Breakdown by Category</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
-                        <span>Health Insurance (2 claims)</span>
-                        <span>₹57,500 (67%)</span>
-                      </div>
-                      <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px' }}>
-                        <div style={{ width: '67%', height: '100%', backgroundColor: '#2563eb', borderRadius: '4px' }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>
-                        <span>Motor / Auto (1 claims)</span>
-                        <span>₹28,000 (33%)</span>
-                      </div>
-                      <div style={{ width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px' }}>
-                        <div style={{ width: '33%', height: '100%', backgroundColor: '#0284c7', borderRadius: '4px' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={styles.panelCard}>
-                  <h4 style={{ margin: '0 0 16px 0' }}>Live System Activity Feed</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <span style={styles.tagOrange}>Claim Pending</span>
-                      <span><strong>Aarav Sharma</strong> submitted ₹45,000 claim</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <span style={styles.tagBlue}>Policy Issued</span>
-                      <span>Term Life Assurance issued to Rohan Gupta</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <span style={styles.tagGreen}>Claim Approved</span>
-                      <span><strong>Priya Verma</strong> ₹12,500 payout approved</span>
-                    </div>
-                  </div>
+                  <span style={styles.kpiLabel}>SETTLEMENT RATE</span>
+                  <div style={{ ...styles.kpiVal, color: '#16a34a' }}>{approvalRate}%</div>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Approval efficiency</span>
                 </div>
               </div>
 
               <div style={{ ...styles.panelCard, marginTop: '20px' }}>
-                <h4 style={{ margin: '0 0 16px 0' }}>Portal Module Quick Access</h4>
+                <h4 style={{ margin: '0 0 16px 0' }}>Quick Navigation Shortcuts</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                   <button onClick={() => setActiveTab('Claims Desk')} style={styles.quickAccessBtn}>
                     <span style={{ fontSize: '24px' }}>⚖️</span>
-                    <strong>Claims Desk</strong>
+                    <strong>Claims Desk & Proofs</strong>
                   </button>
                   <button onClick={() => setActiveTab('Customer Directory')} style={styles.quickAccessBtn}>
                     <span style={{ fontSize: '24px' }}>👥</span>
-                    <strong>Customers</strong>
+                    <strong>Customer Directory</strong>
                   </button>
                   <button onClick={() => setActiveTab('Policies')} style={styles.quickAccessBtn}>
                     <span style={{ fontSize: '24px' }}>📋</span>
-                    <strong>Policies</strong>
+                    <strong>Policy Administration</strong>
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 2. CLAIMS DESK */}
+          {/* 2. CLAIMS DESK (Fully equipped with proof reading, script downloads, print, and new claim creation) */}
           {activeTab === 'Claims Desk' && (
             <div>
               <div style={styles.topBarFlex}>
                 <div>
                   <h2 style={styles.pageTitle}>Claims Settlement Desk</h2>
-                  <p style={styles.pageSubtitle}>Session logged in as <strong>{user.name}</strong> ({user.role})</p>
+                  <p style={styles.pageSubtitle}>Review hospital proof documentation, verify scripts, and process payouts.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button onClick={() => setIsNewClaimModalOpen(true)} style={styles.actionBlueBtn}>+ Submit New Claim</button>
@@ -556,7 +482,7 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h3>Claim Case File ({selectedClaim.id})</h3>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <button onClick={() => handlePrintDocument(`Claim_${selectedClaim.id}`)} style={styles.backBtn} title="Print Case File">🖨️ Print</button>
+                      <button onClick={() => handlePrintDocument(`Claim_${selectedClaim.id}`)} style={styles.backBtn} title="Print Case File">🖨️ Print Claim File</button>
                       <span style={selectedClaim.status === 'Pending' ? styles.tagOrange : selectedClaim.status === 'Approved' ? styles.tagGreen : styles.tagRed}>
                         {selectedClaim.status}
                       </span>
@@ -583,40 +509,45 @@ export default function App() {
                   </div>
 
                   <div style={{ marginBottom: '16px' }}>
-                    <label style={styles.miniLabel}>INCIDENT DESCRIPTION</label>
+                    <label style={styles.miniLabel}>INCIDENT & CLAIM NOTES</label>
                     <div style={{ fontSize: '13px', padding: '12px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginTop: '4px' }}>
                       {selectedClaim.description}
                     </div>
                   </div>
 
-                  {/* DOCUMENTATION & PROOF BUTTONS */}
-                  <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#f1f5f9', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#0f172a' }}>DOCUMENTATION & PROOF FILE</div>
-                      <div style={{ fontSize: '12px', color: '#2563eb' }}>📄 {selectedClaim.proofName}</div>
+                  {/* PROOF & SCRIPT VERIFICATION PANEL */}
+                  <div style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#f1f5f9', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#0f172a' }}>DOCUMENTATION PROOF & SCRIPT</div>
+                        <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#2563eb' }}>📄 {selectedClaim.proofName}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => setProofViewerDoc(selectedClaim)} style={styles.actionBlueBtn}>🔍 Read Proof</button>
+                        <button onClick={() => handleDownloadScriptOrProof(selectedClaim.proofName, selectedClaim.proofScript)} style={styles.backBtn}>⬇ Download Proof Script</button>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => setProofViewerDoc(selectedClaim)} style={styles.backBtn}>🔍 View Proof</button>
-                      <button onClick={() => handleDownloadScriptOrProof(selectedClaim.proofName)} style={styles.actionBlueBtn}>⬇ Download Proof Script</button>
+                    <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#334155', backgroundColor: '#ffffff', padding: '8px', borderRadius: '4px', border: '1px solid #e2e8f0', marginTop: '8px' }}>
+                      <strong>Script Preview:</strong> {selectedClaim.proofScript}
                     </div>
                   </div>
 
                   {selectedClaim.status === 'Pending' ? (
                     <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                      <label style={styles.miniLabel}>ACTION BY OFFICER ({user.name.toUpperCase()})</label>
+                      <label style={styles.miniLabel}>OFFICER RESOLUTION ACTION ({user.name.toUpperCase()})</label>
                       <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                         <button onClick={() => handleClaimStatusChange(selectedClaim.id, 'Rejected')} style={styles.rejectBtn}>
                           Reject Claim
                         </button>
                         <button onClick={() => handleClaimStatusChange(selectedClaim.id, 'Approved')} style={styles.approveBtn}>
-                          Approve Payout
+                          Approve Payout & Script
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>Resolution locked in audit record by {user.name}.</span>
-                      <button onClick={() => handleDownloadScriptOrProof(`Approval_Script_${selectedClaim.id}`)} style={styles.backBtn}>📥 Download Approval Script</button>
+                      <button onClick={() => handleDownloadScriptOrProof(`Approval_Script_${selectedClaim.id}`, selectedClaim.proofScript)} style={styles.backBtn}>📥 Download Approval Script</button>
                     </div>
                   )}
                 </div>
@@ -624,13 +555,13 @@ export default function App() {
             </div>
           )}
 
-          {/* 3. CUSTOMER DIRECTORY */}
+          {/* 3. CUSTOMER DIRECTORY (Fully equipped with Add Company button) */}
           {activeTab === 'Customer Directory' && (
             <div>
               <div style={styles.topBarFlex}>
                 <div>
                   <h2 style={styles.pageTitle}>Customer Directory</h2>
-                  <p style={styles.pageSubtitle}>Manage client corporate accounts and primary company administrators.</p>
+                  <p style={styles.pageSubtitle}>Manage corporate accounts and company administrators.</p>
                 </div>
                 <button onClick={() => setIsNewCompanyModalOpen(true)} style={styles.actionBlueBtn}>+ Add New Company</button>
               </div>
@@ -648,7 +579,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {CUSTOMERS.map((cust) => (
+                    {customers.map((cust) => (
                       <tr key={cust.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                         <td style={{ padding: '12px', fontWeight: 'bold', color: '#64748b' }}>{cust.id}</td>
                         <td style={{ padding: '12px', fontWeight: 'bold' }}>{cust.company}</td>
@@ -671,35 +602,17 @@ export default function App() {
             </div>
           )}
 
-          {/* 4. POLICIES */}
+          {/* 4. POLICIES (Fully equipped with Issue New Policy button) */}
           {activeTab === 'Policies' && (
             <div>
               <div style={styles.topBarFlex}>
                 <div>
                   <h2 style={styles.pageTitle}>Policy Administration</h2>
-                  <p style={styles.pageSubtitle}>Issue new insurance products, inspect active terms, and review policy conditions.</p>
+                  <p style={styles.pageSubtitle}>Issue new insurance products and inspect active terms.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button onClick={() => setIsNewPolicyModalOpen(true)} style={styles.actionBlueBtn}>+ Issue New Policy</button>
                   <button onClick={() => setActiveTab('Dashboard')} style={styles.backBtn}>← Back</button>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-                <div style={styles.kpiCard}>
-                  <span style={styles.kpiLabel}>ACTIVE POLICIES</span>
-                  <div style={styles.kpiVal}>{POLICIES.length}</div>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>Policies bound and active</span>
-                </div>
-                <div style={styles.kpiCard}>
-                  <span style={styles.kpiLabel}>HEALTH & LIFE PLANS</span>
-                  <div style={{ ...styles.kpiVal, color: '#16a34a' }}>3</div>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>High coverage bindings</span>
-                </div>
-                <div style={styles.kpiCard}>
-                  <span style={styles.kpiLabel}>MOTOR & PROPERTY</span>
-                  <div style={{ ...styles.kpiVal, color: '#f59e0b' }}>1</div>
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>Asset protection contracts</span>
                 </div>
               </div>
 
@@ -766,8 +679,8 @@ export default function App() {
                       <span style={{ fontSize: '12px', color: '#64748b' }}>Policy Ref. {selectedPolicy.id}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handlePrintDocument(`Policy_${selectedPolicy.id}`)} style={styles.backBtn}>🖨️ Print</button>
-                      <button onClick={() => handleDownloadScriptOrProof(`Policy_Terms_${selectedPolicy.id}`)} style={styles.actionBlueBtn}>⬇ Download Script</button>
+                      <button onClick={() => handlePrintDocument(`Policy_${selectedPolicy.id}`)} style={styles.backBtn}>🖨️ Print Policy</button>
+                      <button onClick={() => handleDownloadScriptOrProof(`Policy_Terms_${selectedPolicy.id}`, `Policy Name: ${selectedPolicy.name}\nHolder: ${selectedPolicy.holder}\nMax Sum: ${selectedPolicy.maxSum}`)} style={styles.actionBlueBtn}>⬇ Download Script</button>
                     </div>
                   </div>
 
@@ -787,25 +700,6 @@ export default function App() {
                     <div>
                       <label style={styles.miniLabel}>ANNUAL PREMIUM</label>
                       <div style={{ fontWeight: 'bold' }}>{selectedPolicy.premium}</div>
-                    </div>
-                    <div>
-                      <label style={styles.miniLabel}>DEDUCTIBLE TERM</label>
-                      <div style={{ fontWeight: 'bold' }}>{selectedPolicy.deductible}</div>
-                    </div>
-                    <div>
-                      <label style={styles.miniLabel}>LINKED ACCOUNT ID</label>
-                      <div style={{ fontWeight: 'bold' }}>{selectedPolicy.accountId}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <div>
-                      <span style={{ color: '#64748b' }}>EFFECTIVE START: </span>
-                      <strong>{selectedPolicy.startDate}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#dc2626' }}>POLICY EXPIRY: </span>
-                      <strong style={{ color: '#dc2626' }}>{selectedPolicy.expiryDate}</strong>
                     </div>
                   </div>
                 </div>
@@ -836,76 +730,80 @@ export default function App() {
                 <div style={{ fontSize: '12px', color: '#64748b' }}>✉️ {selectedModalCust.email}</div>
                 <div style={{ fontSize: '12px', color: '#64748b' }}>📞 {selectedModalCust.phone}</div>
               </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #cbd5e1', paddingTop: '12px' }}>
-                <div>
-                  <div style={{ fontSize: '10px', color: '#64748b' }}>Active Policies:</div>
-                  <div style={{ fontWeight: 'bold' }}>{selectedModalCust.activePolicies}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '10px', color: '#64748b' }}>Total Coverage Volume:</div>
-                  <div style={{ fontWeight: 'bold', color: '#16a34a' }}>{selectedModalCust.coverage}</div>
-                </div>
-              </div>
             </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
               <button onClick={() => handlePrintDocument(selectedModalCust.company)} style={styles.backBtn}>🖨️ Print Summary</button>
               <button onClick={() => setSelectedModalCust(null)} style={{ ...styles.actionBlueBtn, flex: 1, backgroundColor: '#0f172a' }}>
-                Close Summary
+                Close
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2. PROOF VIEWER MODAL */}
+      {/* 2. PROOF & SCRIPT VIEWER MODAL (Read Proof, View Documentation) */}
       {proofViewerDoc && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalBox, width: '600px' }}>
+          <div style={{ ...styles.modalBox, width: '650px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0 }}>Proof Documentation Viewer</h3>
+              <h3 style={{ margin: 0 }}>Proof Documentation & Script Reader</h3>
               <button onClick={() => setProofViewerDoc(null)} style={{ border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
             </div>
             <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 12px 0' }}>File: {proofViewerDoc.proofName} (Claim ID: {proofViewerDoc.id})</p>
             
-            <div style={{ width: '100%', height: '280px', backgroundColor: '#e2e8f0', borderRadius: '8px', overflow: 'hidden', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={proofViewerDoc.proofUrl} alt="Proof receipt" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ width: '100%', height: '220px', backgroundColor: '#e2e8f0', borderRadius: '8px', overflow: 'hidden', marginBottom: '12px' }}>
+              <img src={proofViewerDoc.proofUrl} alt="Claim proof receipt" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={styles.miniLabel}>VERIFIED PROOF SCRIPT & METADATA</label>
+              <div style={{ fontSize: '12px', fontFamily: 'monospace', backgroundColor: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', color: '#0f172a' }}>
+                {proofViewerDoc.proofScript}
+              </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <button onClick={() => handleDownloadScriptOrProof(proofViewerDoc.proofName)} style={styles.actionBlueBtn}>⬇ Download Proof Script</button>
+              <button onClick={() => handleDownloadScriptOrProof(proofViewerDoc.proofName, proofViewerDoc.proofScript)} style={styles.actionBlueBtn}>⬇ Download Proof Script</button>
               <button onClick={() => setProofViewerDoc(null)} style={styles.backBtn}>Close Viewer</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 3. SUBMIT NEW CLAIM MODAL */}
+      {/* 3. SUBMIT NEW CLAIM MODAL (Fully interactive with proof script upload fields) */}
       {isNewClaimModalOpen && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalBox}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0 }}>Submit New Claim</h3>
+              <h3 style={{ margin: 0 }}>Submit New Claim & Proof</h3>
               <button onClick={() => setIsNewClaimModalOpen(false)} style={{ border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
             </div>
             <form onSubmit={handleCreateClaimSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
               <div>
                 <label style={styles.miniLabel}>APPLICANT NAME</label>
-                <input type="text" required placeholder="e.g. Kavita Sharma" value={newClaimForm.applicant} onChange={e => setNewClaimForm({...newClaimForm, applicant: e.target.value})} style={styles.inputModal} />
+                <input type="text" required placeholder="e.g. Aarav Sharma" value={newClaimForm.applicant} onChange={e => setNewClaimForm({...newClaimForm, applicant: e.target.value})} style={styles.inputModal} />
               </div>
               <div>
                 <label style={styles.miniLabel}>POLICY REF ID</label>
                 <select value={newClaimForm.policyId} onChange={e => setNewClaimForm({...newClaimForm, policyId: e.target.value})} style={styles.selectModal}>
-                  {POLICIES.map(p => <option key={p.id} value={p.id}>{p.id} - {p.name}</option>)}
+                  {policies.map(p => <option key={p.id} value={p.id}>{p.id} - {p.name}</option>)}
                 </select>
               </div>
               <div>
                 <label style={styles.miniLabel}>REQUESTED PAYOUT AMOUNT (₹)</label>
-                <input type="number" required placeholder="e.g. 18500" value={newClaimForm.payout} onChange={e => setNewClaimForm({...newClaimForm, payout: e.target.value})} style={styles.inputModal} />
+                <input type="number" required placeholder="e.g. 25000" value={newClaimForm.payout} onChange={e => setNewClaimForm({...newClaimForm, payout: e.target.value})} style={styles.inputModal} />
+              </div>
+              <div>
+                <label style={styles.miniLabel}>UPLOAD PROOF FILENAME</label>
+                <input type="text" required placeholder="Hospital_Bill_Receipt.pdf" value={newClaimForm.proofName} onChange={e => setNewClaimForm({...newClaimForm, proofName: e.target.value})} style={styles.inputModal} />
+              </div>
+              <div>
+                <label style={styles.miniLabel}>PROOF SCRIPT / VERIFICATION DATA</label>
+                <textarea required placeholder="Enter proof script or hospital verification notes..." value={newClaimForm.proofScript} onChange={e => setNewClaimForm({...newClaimForm, proofScript: e.target.value})} style={{ ...styles.inputModal, height: '60px' }} />
               </div>
               <div>
                 <label style={styles.miniLabel}>INCIDENT DESCRIPTION</label>
-                <textarea required placeholder="Describe medical or incident details..." value={newClaimForm.description} onChange={e => setNewClaimForm({...newClaimForm, description: e.target.value})} style={{ ...styles.inputModal, height: '70px' }} />
+                <textarea required placeholder="Describe medical or incident details..." value={newClaimForm.description} onChange={e => setNewClaimForm({...newClaimForm, description: e.target.value})} style={{ ...styles.inputModal, height: '60px' }} />
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                 <button type="button" onClick={() => setIsNewClaimModalOpen(false)} style={styles.backBtn}>Cancel</button>
@@ -997,17 +895,6 @@ const styles = {
 
   toastNotification: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#0f172a', color: '#ffffff', padding: '12px 20px', borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.3)', border: '1px solid #334155', zIndex: 9999, fontSize: '13px', fontWeight: 'bold' },
 
-  loginPage: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0b1329', fontFamily: 'sans-serif' },
-  loginCard: { width: '100%', maxWidth: '400px', backgroundColor: '#ffffff', borderRadius: '12px', padding: '32px' },
-  loginTitle: { margin: '0 0 6px 0', fontSize: '22px', fontWeight: 'bold', textAlign: 'center' },
-  loginSubtitle: { margin: '0 0 24px 0', fontSize: '13px', color: '#64748b', textAlign: 'center' },
-  form: { display: 'flex', flexDirection: 'column', gap: '16px' },
-  inputGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  inputLabel: { fontSize: '11px', fontWeight: 'bold', color: '#475569' },
-  select: { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' },
-  input: { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', width: '100%', boxSizing: 'border-box' },
-  signInBtn: { padding: '12px', backgroundColor: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' },
-
   appLayout: { display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'system-ui, sans-serif' },
   sidebar: { width: '240px', backgroundColor: '#0b1329', color: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '20px 16px', flexShrink: 0 },
   brandHeader: { paddingBottom: '16px', borderBottom: '1px solid #1e293b', marginBottom: '16px' },
@@ -1045,7 +932,6 @@ const styles = {
   tagGreen: { backgroundColor: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' },
   tagOrange: { backgroundColor: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' },
   tagRed: { backgroundColor: '#fee2e2', color: '#b91c1c', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' },
-  tagBlue: { backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' },
 
   approveBtn: { flex: 1, padding: '10px', backgroundColor: '#16a34a', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
   rejectBtn: { flex: 1, padding: '10px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
@@ -1053,9 +939,10 @@ const styles = {
   quickAccessBtn: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '20px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' },
 
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modalBox: { backgroundColor: '#ffffff', width: '450px', borderRadius: '12px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
+  modalBox: { backgroundColor: '#ffffff', width: '480px', borderRadius: '12px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' },
   inputModal: { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', boxSizing: 'border-box' },
-  selectModal: { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', backgroundColor: '#ffffff', boxSizing: 'border-box' }
+  selectModal: { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', backgroundColor: '#ffffff', boxSizing: 'border-box' },
+  input: { padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', width: '100%', boxSizing: 'border-box' }
 };
 
 
