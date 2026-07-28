@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
-// ---------------------------------------------------------------------------
-// 1. RENDER BACKEND API CONFIGURATION
-// ---------------------------------------------------------------------------
 const API_BASE_URL = 'https://insurcare-api.onrender.com/api';
 
-// ---------------------------------------------------------------------------
-// 2. LOGIN / AUTHENTICATION COMPONENT
-// ---------------------------------------------------------------------------
-function Login({ setToken, setUser }) {
+function App() {
+  const [token, setToken] = useState(() => localStorage.getItem('insurcare_token'));
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('insurcare_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -31,7 +29,7 @@ function Login({ setToken, setUser }) {
       const data = await response.json();
 
       if (response.ok) {
-        const authToken = data.token || data.access_token || 'authenticated-token';
+        const authToken = data.token || data.access_token || 'active-user-token';
         const userData = data.user || { email };
 
         localStorage.setItem('insurcare_token', authToken);
@@ -39,91 +37,16 @@ function Login({ setToken, setUser }) {
 
         setToken(authToken);
         setUser(userData);
-        
-        navigate('/dashboard');
       } else {
         setError(data.message || 'Invalid email or password.');
       }
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Unable to reach Render backend server. Please wait ~30s for the instance to wake up.');
+      console.error('Login connection error:', err);
+      setError('Unable to reach Render server. Please wait ~30 seconds for the backend instance to spin up.');
     } finally {
       setLoading(false);
     }
   };
-
-  return (
-    <div style={styles.authContainer}>
-      <div style={styles.authCard}>
-        <h2 style={styles.title}>Insur-Care Portal</h2>
-        <p style={styles.subtitle}>Sign in to access your dashboard</p>
-        
-        {error && <div style={styles.errorAlert}>{error}</div>}
-
-        <form onSubmit={handleLogin} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Email Address</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@insurcare.com"
-              style={styles.input}
-            />
-          </div>
-
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              style={styles.input}
-            />
-          </div>
-
-          <button type="submit" disabled={loading} style={styles.primaryButton}>
-            {loading ? 'Authenticating...' : 'Sign In'}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// 3. PROTECTED DASHBOARD COMPONENT
-// ---------------------------------------------------------------------------
-function Dashboard({ user, handleLogout }) {
-  return (
-    <div style={styles.dashboardLayout}>
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Insur-Care Portal</h1>
-        <div style={styles.userInfo}>
-          <span>Logged in as: {user?.email || 'Admin User'}</span>
-          <button onClick={handleLogout} style={styles.logoutButton}>Sign Out</button>
-        </div>
-      </header>
-      <main style={styles.mainContent}>
-        <h2>Executive Dashboard</h2>
-        <p>Welcome back! Authentication successfully verified via Render API.</p>
-      </main>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// 4. MAIN APP ROUTER WITH EXPORT DEFAULT
-// ---------------------------------------------------------------------------
-export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem('insurcare_token'));
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('insurcare_user');
-    return saved ? JSON.parse(saved) : null;
-  });
 
   const handleLogout = () => {
     localStorage.removeItem('insurcare_token');
@@ -132,26 +55,71 @@ export default function App() {
     setUser(null);
   };
 
+  // 1. IF NOT LOGGED IN -> SHOW LOGIN SCREEN
+  if (!token) {
+    return (
+      <div style={styles.authContainer}>
+        <div style={styles.authCard}>
+          <h2 style={styles.title}>Insur-Care Portal</h2>
+          <p style={styles.subtitle}>Sign in to access your dashboard</p>
+          
+          {error && <div style={styles.errorAlert}>{error}</div>}
+
+          <form onSubmit={handleLogin} style={styles.form}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Email Address</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@insurcare.com"
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                style={styles.input}
+              />
+            </div>
+
+            <button type="submit" disabled={loading} style={styles.primaryButton}>
+              {loading ? 'Authenticating...' : 'Sign In'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. IF LOGGED IN -> SHOW DASHBOARD
   return (
-    <Router>
-      <Routes>
-        <Route 
-          path="/login" 
-          element={!token ? <Login setToken={setToken} setUser={setUser} /> : <Navigate to="/dashboard" />} 
-        />
-        <Route 
-          path="/dashboard" 
-          element={token ? <Dashboard user={user} handleLogout={handleLogout} /> : <Navigate to="/login" />} 
-        />
-        <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
-      </Routes>
-    </Router>
+    <div style={styles.dashboardLayout}>
+      <header style={styles.header}>
+        <h1 style={styles.logo}>Insur-Care Portal</h1>
+        <div style={styles.userInfo}>
+          <span>Logged in as: {user?.email || 'User'}</span>
+          <button onClick={handleLogout} style={styles.logoutButton}>Sign Out</button>
+        </div>
+      </header>
+      <main style={styles.mainContent}>
+        <h2>Executive Dashboard</h2>
+        <p>Authentication successfully verified via Render backend API!</p>
+      </main>
+    </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// 5. STYLES
-// ---------------------------------------------------------------------------
+// THIS LINE RESOLVES THE SYNTAX ERROR IN MAIN.JSX:
+export default App;
+
 const styles = {
   authContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f4f6f8' },
   authCard: { width: '100%', maxWidth: '400px', padding: '30px', borderRadius: '10px', backgroundColor: '#ffffff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' },
@@ -170,6 +138,7 @@ const styles = {
   logoutButton: { padding: '6px 12px', backgroundColor: '#ef4444', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
   mainContent: { padding: '32px' }
 };
+
 
 
 
