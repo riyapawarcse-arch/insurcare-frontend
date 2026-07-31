@@ -3,6 +3,7 @@ import API from './api';
 
 const Login = ({ onLoginSuccess }) => {
   const [view, setView] = useState('login'); // 'login', 'register', or 'forgot'
+  const [loginType, setLoginType] = useState('customer'); // 'customer' or 'staff'
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -13,11 +14,32 @@ const Login = ({ onLoginSuccess }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Pre-configured company member profiles for quick login
+  const companyStaffList = [
+    { name: 'Riya Pawar', email: 'riyapawar14@gmail.com', role: 'System Admin & Operations Lead' },
+    { name: 'Vikram Malhotra', email: 'vikram@insurcare.com', role: 'Corporate Client Admin' },
+    { name: 'Ananya Deshmukh', email: 'ananya@insurcare.com', role: 'Claims Settlement Officer' }
+  ];
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleStaffSelect = (e) => {
+    const selectedEmail = e.target.value;
+    const staff = companyStaffList.find(s => s.email === selectedEmail);
+    if (staff) {
+      setFormData({
+        ...formData,
+        email: staff.email,
+        password: 'default_staff_password' // Auto-filled for frictionless staff login matching backend
+      });
+    } else {
+      setFormData({ ...formData, email: '', password: '' });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -35,7 +57,8 @@ const Login = ({ onLoginSuccess }) => {
         setSuccessMsg('Account created successfully! Signing you in...');
         const loginResponse = await API.post('/auth/login', {
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          type: 'customer'
         });
         const token = loginResponse.data.access_token;
         if (token) {
@@ -53,7 +76,8 @@ const Login = ({ onLoginSuccess }) => {
       } else {
         const response = await API.post('/auth/login', {
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          type: loginType
         });
         const token = response.data.access_token;
         if (token) {
@@ -124,6 +148,48 @@ const Login = ({ onLoginSuccess }) => {
           </p>
         </div>
 
+        {/* Role Toggle Tabs (Only shown on standard Login view) */}
+        {view === 'login' && (
+          <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '10px', marginBottom: '20px' }}>
+            <button
+              type="button"
+              onClick={() => { setLoginType('customer'); setFormData({ email: '', password: '', new_password: '' }); }}
+              style={{
+                flex: 1,
+                padding: '8px',
+                borderRadius: '8px',
+                border: 'none',
+                background: loginType === 'customer' ? '#2563eb' : 'transparent',
+                color: loginType === 'customer' ? '#ffffff' : '#64748b',
+                fontWeight: '600',
+                fontSize: '13px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              Customer
+            </button>
+            <button
+              type="button"
+              onClick={() => { setLoginType('staff'); setFormData({ email: '', password: '', new_password: '' }); }}
+              style={{
+                flex: 1,
+                padding: '8px',
+                borderRadius: '8px',
+                border: 'none',
+                background: loginType === 'staff' ? '#2563eb' : 'transparent',
+                color: loginType === 'staff' ? '#ffffff' : '#64748b',
+                fontWeight: '600',
+                fontSize: '13px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              Company Member
+            </button>
+          </div>
+        )}
+
         {errorMsg && (
           <div
             style={{
@@ -161,29 +227,60 @@ const Login = ({ onLoginSuccess }) => {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '18px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="name@company.com"
-              required
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-                outline: 'none',
-                backgroundColor: '#f8fafc'
-              }}
-            />
-          </div>
+          {view === 'login' && loginType === 'staff' ? (
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                Select Staff Profile
+              </label>
+              <select
+                onChange={handleStaffSelect}
+                value={formData.email}
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  backgroundColor: '#f8fafc',
+                  color: '#0f172a'
+                }}
+              >
+                <option value="">-- Choose Internal Profile --</option>
+                {companyStaffList.map((staff, idx) => (
+                  <option key={idx} value={staff.email}>
+                    {staff.name} ({staff.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="name@company.com"
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  backgroundColor: '#f8fafc'
+                }}
+              />
+            </div>
+          )}
 
           {view !== 'forgot' && (
             <div style={{ marginBottom: view === 'login' ? '12px' : '24px' }}>
