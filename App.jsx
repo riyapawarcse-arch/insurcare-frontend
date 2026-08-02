@@ -217,7 +217,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* CHARTS GRID SECTION (Revenue, Customer Growth, Policy Distribution, Claims Status) */}
+              {/* CHARTS GRID SECTION */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                 
                 {/* 1. Revenue Trend (Line Chart) */}
@@ -294,7 +294,7 @@ export default function App() {
 
               </div>
 
-              {/* 8. QUICK ACTIONS SECTION */}
+              {/* QUICK ACTIONS SECTION */}
               <div style={styles.cardBox}>
                 <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '16px' }}>Quick Actions Section</h3>
                 <div style={styles.quickActionsGrid}>
@@ -316,7 +316,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 6. Premium Collection Bar Chart */}
+              {/* Premium Collection Bar Chart */}
               <div style={styles.cardBox}>
                 <h3 style={styles.chartTitle}>Monthly Premium Collection</h3>
                 <p style={styles.chartSub}>Aggregated premium inflows over past 6 months</p>
@@ -333,7 +333,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 7. Recent Customers Table */}
+              {/* Recent Customers Table */}
               <div style={styles.cardBox}>
                 <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Recent Customers Roster</h3>
                 <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px' }}>Latest registered clients and active policy statuses</p>
@@ -351,7 +351,7 @@ export default function App() {
                     </thead>
                     <tbody>
                       {recentCustomersData.map((cust) => (
-                        <tr key={cust.id} style={styles.tr} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <tr key={cust.id} style={styles.tr}>
                           <td style={styles.td}><strong style={{ color: '#0f172a' }}>{cust.name}</strong></td>
                           <td style={styles.td}>{cust.email}</td>
                           <td style={styles.td}>{cust.policy}</td>
@@ -369,10 +369,10 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 9. Activity Timeline & 10. Notifications Card */}
+              {/* Activity Timeline & Notifications Card */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                 
-                {/* 9. Activity Timeline */}
+                {/* Activity Timeline */}
                 <div style={styles.cardBox}>
                   <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Activity Timeline</h3>
                   <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px' }}>Real-time audit log of system events</p>
@@ -392,7 +392,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 10. Notifications Card */}
+                {/* Notifications Card */}
                 <div style={styles.cardBox}>
                   <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Notifications & Alerts</h3>
                   <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px' }}>Urgent operational items requiring attention</p>
@@ -472,17 +472,17 @@ const styles = {
   sectionSub: { fontSize: '13px', color: '#64748b', margin: 0 },
 
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' },
-  kpiCard: { backgroundColor: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', display: 'flex', alignItems: 'center', gap: '16px', transition: 'transform 0.2s ease, box-shadow 0.2s ease', cursor: 'pointer' },
-  kpiIconBox: { width: '48px', height: '48px', borderRadius: '10px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' },
+  kpiCard: { backgroundColor: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', display: 'flex', alignItems: 'center', gap: '16px' },
+  kpiIconBox: { width: '48px', height: '48px', borderRadius: '10px', backgroundColor: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 },
 
   metricLabel: { fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '0.05em' },
   metricVal: { fontSize: '22px', fontWeight: '700', color: '#0f172a', margin: '4px 0 2px 0' },
 
   cardBox: { backgroundColor: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', marginBottom: '24px' },
-  shortcutCard: { display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s ease' },
+  shortcutCard: { display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' },
 
   quickActionsGrid: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' },
-  actionBtn: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', transition: 'background-color 0.2s ease' },
+  actionBtn: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer' },
 
   chartTitle: { fontSize: '15px', fontWeight: '700', color: '#0f172a', margin: '0 0 2px 0' },
   chartSub: { fontSize: '12px', color: '#64748b', margin: 0 },
@@ -501,6 +501,7 @@ const styles = {
   primaryBtn: { padding: '10px 18px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)' },
   toastNotification: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#0f172a', color: 'white', padding: '12px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', zIndex: 2000, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)' }
 };
+
 
 
 
