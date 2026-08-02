@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
   BarChart,
@@ -15,21 +16,21 @@ import {
 } from "recharts";
 
 const revenueData = [
-  { month: 'Jan', revenue: 42000 },
-  { month: 'Feb', revenue: 53000 },
-  { month: 'Mar', revenue: 48000 },
-  { month: 'Apr', revenue: 61000 },
+  { month: 'January', revenue: 42000 },
+  { month: 'February', revenue: 53000 },
+  { month: 'March', revenue: 48000 },
+  { month: 'April', revenue: 61000 },
   { month: 'May', revenue: 58000 },
-  { month: 'Jun', revenue: 75000 },
+  { month: 'June', revenue: 75000 },
 ];
 
 const customerGrowthData = [
-  { month: 'Jan', customers: 120 },
-  { month: 'Feb', customers: 190 },
-  { month: 'Mar', customers: 150 },
-  { month: 'Apr', customers: 220 },
+  { month: 'January', customers: 120 },
+  { month: 'February', customers: 190 },
+  { month: 'March', customers: 150 },
+  { month: 'April', customers: 220 },
   { month: 'May', customers: 280 },
-  { month: 'Jun', customers: 340 },
+  { month: 'June', customers: 340 },
 ];
 
 const policyDistributionData = [
@@ -47,12 +48,12 @@ const claimsStatusData = [
 ];
 
 const premiumCollectionData = [
-  { month: 'Jan', premium: 35000 },
-  { month: 'Feb', premium: 42000 },
-  { month: 'Mar', premium: 39000 },
-  { month: 'Apr', premium: 51000 },
+  { month: 'January', premium: 35000 },
+  { month: 'February', premium: 42000 },
+  { month: 'March', premium: 39000 },
+  { month: 'April', premium: 51000 },
   { month: 'May', premium: 48000 },
-  { month: 'Jun', premium: 62000 },
+  { month: 'June', premium: 62000 },
 ];
 
 const recentCustomersData = [
@@ -141,7 +142,7 @@ export default function App() {
                 <button style={styles.primaryBtn} onClick={() => setActiveTab('claims')}>Go to Claims Desk →</button>
               </div>
 
-              {/* TOP KPI CARDS */}
+              {/* 1. TOP KPI CARDS */}
               <div style={styles.kpiGrid}>
                 <div style={styles.kpiCard}>
                   <div style={styles.kpiIconBox}>👥</div>
@@ -223,14 +224,16 @@ export default function App() {
                 <div style={styles.cardBox}>
                   <h3 style={styles.chartTitle}>Monthly Revenue Trend</h3>
                   <p style={styles.chartSub}>January - June 2026 performance</p>
-                  <div style={styles.chartContainer}>
-                    <LineChart width={520} height={260} data={revenueData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                      <YAxis stroke="#64748b" fontSize={12} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={3} dot={{ fill: '#2563eb', r: 5 }} activeDot={{ r: 8 }} />
-                    </LineChart>
+                  <div style={{ width: '100%', marginTop: '16px' }}>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <LineChart data={revenueData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                        <YAxis stroke="#64748b" fontSize={12} />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={3} dot={{ fill: '#2563eb', r: 5 }} activeDot={{ r: 8 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
 
@@ -238,14 +241,16 @@ export default function App() {
                 <div style={styles.cardBox}>
                   <h3 style={styles.chartTitle}>Customer Growth Registration</h3>
                   <p style={styles.chartSub}>New user registrations per month</p>
-                  <div style={styles.chartContainer}>
-                    <BarChart width={520} height={260} data={customerGrowthData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                      <YAxis stroke="#64748b" fontSize={12} />
-                      <Tooltip />
-                      <Bar dataKey="customers" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-                    </BarChart>
+                  <div style={{ width: '100%', marginTop: '16px' }}>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart data={customerGrowthData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                        <YAxis stroke="#64748b" fontSize={12} />
+                        <Tooltip />
+                        <Bar dataKey="customers" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
 
@@ -253,16 +258,18 @@ export default function App() {
                 <div style={styles.cardBox}>
                   <h3 style={styles.chartTitle}>Policy Distribution Breakdown</h3>
                   <p style={styles.chartSub}>Health, Motor, Life, Travel, Home</p>
-                  <div style={styles.chartContainer}>
-                    <PieChart width={520} height={260}>
-                      <Pie data={policyDistributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} label>
-                        {policyDistributionData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
+                  <div style={{ width: '100%', marginTop: '16px' }}>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie data={policyDistributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                          {policyDistributionData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
 
@@ -270,16 +277,18 @@ export default function App() {
                 <div style={styles.cardBox}>
                   <h3 style={styles.chartTitle}>Claims Status Distribution</h3>
                   <p style={styles.chartSub}>Approved, Pending, Rejected metrics</p>
-                  <div style={styles.chartContainer}>
-                    <PieChart width={520} height={260}>
-                      <Pie data={claimsStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} label>
-                        {claimsStatusData.map((entry, index) => (
-                          <Cell key={`claim-cell-${index}`} fill={CLAIMS_COLORS[index % CLAIMS_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
+                  <div style={{ width: '100%', marginTop: '16px' }}>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie data={claimsStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                          {claimsStatusData.map((entry, index) => (
+                            <Cell key={`claim-cell-${index}`} fill={CLAIMS_COLORS[index % CLAIMS_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
 
@@ -311,14 +320,16 @@ export default function App() {
               <div style={styles.cardBox}>
                 <h3 style={styles.chartTitle}>Monthly Premium Collection</h3>
                 <p style={styles.chartSub}>Aggregated premium inflows over past 6 months</p>
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-                  <BarChart width={1050} height={280} data={premiumCollectionData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-                    <YAxis stroke="#64748b" fontSize={12} />
-                    <Tooltip />
-                    <Bar dataKey="premium" fill="#60a5fa" radius={[6, 6, 0, 0]} />
-                  </BarChart>
+                <div style={{ width: '100%', marginTop: '16px' }}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={premiumCollectionData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                      <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                      <YAxis stroke="#64748b" fontSize={12} />
+                      <Tooltip />
+                      <Bar dataKey="premium" fill="#60a5fa" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
@@ -467,7 +478,7 @@ const styles = {
   metricLabel: { fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '0.05em' },
   metricVal: { fontSize: '22px', fontWeight: '700', color: '#0f172a', margin: '4px 0 2px 0' },
 
-  cardBox: { backgroundColor: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', marginBottom: '24px' },
+  cardBox: { backgroundColor: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', marginBottom: '24px', minWidth: 0 },
   shortcutCard: { display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer' },
 
   quickActionsGrid: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' },
@@ -475,7 +486,6 @@ const styles = {
 
   chartTitle: { fontSize: '15px', fontWeight: '700', color: '#0f172a', margin: '0 0 2px 0' },
   chartSub: { fontSize: '12px', color: '#64748b', margin: 0 },
-  chartContainer: { display: 'flex', justifyContent: 'center', marginTop: '16px', overflowX: 'auto' },
 
   table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' },
   tableHeaderRow: { borderBottom: '2px solid #e2e8f0', color: '#64748b', backgroundColor: '#f8fafc' },
